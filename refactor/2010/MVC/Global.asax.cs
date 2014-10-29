@@ -5,6 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 using Domain;
+using Domain.Repository.Implementation;
 
 namespace MVC
 {

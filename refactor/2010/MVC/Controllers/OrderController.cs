@@ -5,6 +5,7 @@ using System.Net.Mail;
 using System.Web;
 using System.Web.Mvc;
 using Domain;
+using Domain.Repository.Implementation;
 using MVC.Models.Order;
 
 namespace MVC.Controllers
