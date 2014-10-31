@@ -1,21 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
 using System.Web.Mvc;
 using Domain.DomainClasses;
 using Domain.Repository.Interfaces;
 using MVC.Models.Order;
+using MVC.Services.Interfaces;
 
 namespace MVC.Controllers
 {
     public class OrderController : Controller
     {
+        private const string OrderEmailFromAddress = "peter@initech.com";
         private IUnitOfWorkFactory _unitOfWorkFactory;
+        private ISMTPService _smtpService;
 
-        public OrderController(IUnitOfWorkFactory unitOfWorkFactory)
+        public OrderController(IUnitOfWorkFactory unitOfWorkFactory, ISMTPService smtpService)
         {
             _unitOfWorkFactory = unitOfWorkFactory;
+            _smtpService = smtpService;
         }
 
         public ActionResult Index()
@@ -73,25 +76,19 @@ namespace MVC.Controllers
 
                 orderRepository.Save(order);
 
-                //Send email
-                MailMessage email = new MailMessage("peter@initech.com", "ordering@initech.com");
-                email.Subject = "Order submitted";
-
-                SmtpClient client = new SmtpClient("localhost");
-
-                try
-                {
-                    client.Send(email);
-                }
-// ReSharper disable once EmptyGeneralCatchClause
-                catch (Exception)
-                {
-                    //It is ok that it doesn't actually send the email for this project    
-                }
+                //TODO:  Gather this from user input
+                SendOrderEmailNotification("ordering@initech.com");
 
                 ViewData["order"] = order;
                 return View("ThankYou");
             }
+        }
+
+        private void SendOrderEmailNotification(string orderEmailToAddress)
+        {
+            MailMessage email = new MailMessage(OrderEmailFromAddress, orderEmailToAddress);
+            email.Subject = "Order submitted";
+            _smtpService.SendEMail(email);
         }
 
         [HttpPost]
