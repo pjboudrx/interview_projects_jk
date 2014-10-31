@@ -12,3 +12,6 @@ The first thing I'll tackle is the repository / data layer. The listed repositor
 * Add a UnitOfWork pattern and interface to the project to wrap the repositories
 * Add the Castle Windsor DI framework to the project to inject dependencies and services into the controller(s)
 * Modify the existing Order controller to use the DI injected services and repositories
+
+### SMTP Service Branch
+There is a hard dependency on the system SMTP libraries.  Create a service that wraps this and inject it into the controller 
