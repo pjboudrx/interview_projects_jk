@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Castle.MicroKernel.ModelBuilder.Descriptors;
 
-namespace Domain
+namespace Domain.Repository.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {
-        IRepository<TEntity> GetRepository<TEntity>() where TEntity : class;
         bool Commit();
+        IRepository<TEntity> GetRepository<TEntity>() where TEntity : class;
     }
 }
