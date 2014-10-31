@@ -55,7 +55,8 @@ namespace MVC.Controllers
             using (var unitOfWork = _unitOfWorkFactory.Create())
             {
                 var orderRepository = unitOfWork.GetRepository<Order>();
-                var orderItems = unitOfWork.GetRepository<OrderItem>().GetAll();
+                var orderItemRepository = unitOfWork.GetRepository<OrderItem>();
+                var orderItems = (IList<OrderItemModel>)Session["order_items"];
                 var order = new Order();
 
                 foreach (var orderItem in orderItems)
@@ -66,6 +67,7 @@ namespace MVC.Controllers
                         quantity = orderItem.quantity,
                         price = orderItem.price
                     };
+                    orderItemRepository.Save(item);
                     order.items.Add(item);
                 }
 
