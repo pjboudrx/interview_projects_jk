@@ -89,8 +89,11 @@
     <Compile Include="Infrastructure\CastleControllerInstaller.cs" />
     <Compile Include="Infrastructure\CastleDALInstaller.cs" />
     <Compile Include="Infrastructure\CastleFactoryInstaller.cs" />
+    <Compile Include="Infrastructure\CastleServiceInstaller.cs" />
     <Compile Include="Models\Order\OrderItemModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\Implementation\SMTPService.cs" />
+    <Compile Include="Services\Interfaces\ISMTPService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\themes\base\images\ui-bg_flat_0_aaaaaa_40x100.png" />
