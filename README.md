@@ -7,8 +7,8 @@ Before I begin adding any new functionality I need tests to cover existing funct
 ### RepositoryInterface Branch
 The first thing I'll tackle is the repository / data layer. The listed repository can't be mocked and there are hard dependencies in the controller on the repository classes.  I'll correct this by:
 
-[x] Modifying the existing repository to fit into a simple generic repository pattern interface
-[x] Add the other objects to the repository coverage while we're at it
-[x] Add a UnitOfWork pattern and interface to the project to wrap the repositories
-[x] Add the Castle Windsor DI framework to the project to inject dependencies and services into the controller(s)
-[x] Modify the existing Order controller to use the DI injected services and repositories
+* Modifying the existing repository to fit into a simple generic repository pattern interface
+* Add the other objects to the repository coverage while we're at it
+* Add a UnitOfWork pattern and interface to the project to wrap the repositories
+* Add the Castle Windsor DI framework to the project to inject dependencies and services into the controller(s)
+* Modify the existing Order controller to use the DI injected services and repositories
