@@ -23,30 +23,19 @@ namespace MVC.Controllers
 
         public ActionResult Index()
         {
-            var items = new List<Item>
+            using (var unitOfWork = _unitOfWorkFactory.Create())
             {
-                                new Item {description = "Red Stapler",price = 50, id = 1},
-                                new Item {description = "TPS Report", price = 3, id = 2},
-                                new Item {description = "Printer", price = 400, id = 3},
-                                new Item {description = "Baseball bat", price = 80, id = 4},
-                                new Item {description = "Michael Bolton CD", price = 12, id = 5}
-                            };
-
-            ViewData["items"] = items;
-            Session["order_items"] = new List<OrderItemModel>();
-
-            return View();
+                ViewData["items"] = unitOfWork.GetRepository<Item>().GetAll();
+                Session["order_items"] = new List<OrderItemModel>();
+                return View();
+            }
         }
 
         public ActionResult ViewPastOrders()
         {
             using (var unitOfWork = _unitOfWorkFactory.Create())
             {
-
-                var orders = unitOfWork.GetRepository<Order>().GetAll();
-
-                ViewData["orders"] = orders;
-
+                ViewData["orders"] = unitOfWork.GetRepository<Order>().GetAll();
                 return View("PastOrders");
             }
         }
@@ -94,53 +83,47 @@ namespace MVC.Controllers
         [HttpPost]
         public ActionResult AddToOrder(FormCollection formCollection)
         {
-            var items = new List<Item>
+            using (var unitOfWork = _unitOfWorkFactory.Create())
             {
-                                new Item {description = "Red Stapler",price = 50, id = 1},
-                                new Item {description = "TPS Report", price = 3, id = 2},
-                                new Item {description = "Printer", price = 400, id = 3},
-                                new Item {description = "Baseball bat", price = 80, id = 4},
-                                new Item {description = "Michael Bolton CD", price = 12, id = 5}
-                            };
-
-            ViewData["items"] = items;
-
-            IList<OrderItemModel> orderItems = (IList<OrderItemModel>)Session["order_items"];
-            if (orderItems == null)
-            {
-                orderItems = new List<OrderItemModel>();
-            }
-
-            int itemId = 0;
-            int itemQuantity = 0;
-
-            foreach (var key in formCollection.Keys)
-            {
-                if (key.ToString().StartsWith("item_id"))
+                IList<Item> items = unitOfWork.GetRepository<Item>().GetAll();
+                ViewData["items"] = items;
+                IList<OrderItemModel> orderItems = (IList<OrderItemModel>) Session["order_items"];
+                if (orderItems == null)
                 {
-                    itemId = int.Parse(formCollection[key.ToString()]);
+                    orderItems = new List<OrderItemModel>();
                 }
 
-                if (key.ToString().StartsWith("item_quantity"))
+                int itemId = 0;
+                int itemQuantity = 0;
+
+                foreach (var key in formCollection.Keys)
                 {
-                    itemQuantity = int.Parse(formCollection[key.ToString()]);
+                    if (key.ToString().StartsWith("item_id"))
+                    {
+                        itemId = int.Parse(formCollection[key.ToString()]);
+                    }
+
+                    if (key.ToString().StartsWith("item_quantity"))
+                    {
+                        itemQuantity = int.Parse(formCollection[key.ToString()]);
+                    }
                 }
+
+                var item = items.First(x => x.id == itemId);
+                var orderItem = new OrderItemModel
+                {
+                    item_id = item.id,
+                    price = item.price,
+                    description = item.description,
+                    quantity = itemQuantity
+                };
+
+                orderItems.Add(orderItem);
+
+                Session["order_items"] = orderItems;
+
+                return View("Index");
             }
-
-            var item = items.First(x => x.id == itemId);
-            var orderItem = new OrderItemModel
-                                    {
-                                        item_id=item.id,
-                                        price=item.price,
-                                        description = item.description,
-                                        quantity = itemQuantity
-                                    };
-
-            orderItems.Add(orderItem);
-
-            Session["order_items"] = orderItems;
-
-            return View("Index");
         }
     }
 }

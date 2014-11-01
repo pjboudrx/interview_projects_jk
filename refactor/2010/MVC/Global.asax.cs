@@ -2,6 +2,8 @@
 using System.Web.Routing;
 using Castle.Windsor;
 using Castle.Windsor.Installer;
+using Domain.DomainClasses;
+using Domain.Repository.Interfaces;
 using MVC.Infrastructure;
 
 namespace MVC
@@ -46,6 +48,20 @@ using Domain.Repository.Implementation;
             RegisterRoutes(RouteTable.Routes);
 
             BootstrapCastleContainer();
+            BootstrapRepositories();
+        }
+
+        private void BootstrapRepositories()
+        {
+            using (var unitOfWork = _container.Resolve<IUnitOfWork>())
+            {
+                var itemRepository = unitOfWork.GetRepository<Item>();
+                itemRepository.Save(new Item {description = "Red Stapler", price = 50, id = 1});
+                itemRepository.Save(new Item {description = "TPS Report", price = 3, id = 2});
+                itemRepository.Save(new Item {description = "Printer", price = 400, id = 3});
+                itemRepository.Save(new Item {description = "Baseball bat", price = 80, id = 4});
+                itemRepository.Save(new Item { description = "Michael Bolton CD", price = 12, id = 5 });
+            }
         }
     }
 }
