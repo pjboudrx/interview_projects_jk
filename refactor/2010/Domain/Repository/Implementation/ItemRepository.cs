@@ -31,8 +31,11 @@ namespace Domain.Repository.Implementation
             {
                 lock (_items)
                 {
-                    var id = _items.Select(item => item.id).Max();
-                    entity.id = ++id;
+                    if (_items.Any())
+                    {
+                        var id = _items.Select(item => item.id).Max();
+                        entity.id = ++id;
+                    }
                     _items.Add(entity);
                 }
 
