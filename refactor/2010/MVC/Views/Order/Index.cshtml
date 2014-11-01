@@ -39,11 +39,13 @@
 
                                 @{foreach (var item in (IList<Item>)ViewData["items"]){
                                     <form action="@Url.Action("AddToOrder","Order")" method="POST">
-                                        <input type="hidden" id="@("item_id_" + item.id)" name="@("item_id_" + item.id)" value="@item.id"/>
+                                        <input type="hidden" id="@("item_id_" + item.id)" name="item_id" value="@item.id"/>
+                                        <input type="hidden" id="@("item_description_" + item.id)" name="description" value="@item.description"/>
+                                        <input type="hidden" id="@("item_price_" + item.id)" name="price" value="@item.price"/>
                                         <tr>
                                             <td>@item.description</td>
                                             <td>@String.Format("{0:C}",item.price)</td>
-                                            <td><input type="text" id="@("item_quantity_" + @item.id)" name="@("item_quantity_" + @item.id)" style="width: 50px;" value="1" /></td>
+                                            <td><input type="text" id="@("item_quantity_" + @item.id)" name="quantity" style="width: 50px;" value="1" /></td>
                                             <td><input type="submit" value="Add to order"/></td>
                                         </tr>
                                     </form>

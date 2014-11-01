@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Net.Mail;
 using System.Web.Mvc;
 using Domain.DomainClasses;
@@ -41,7 +40,7 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
-        public ActionResult Save(FormCollection formCollection)
+        public ActionResult Save()
         {
             //Save Order
             using (var unitOfWork = _unitOfWorkFactory.Create())
@@ -81,7 +80,7 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
-        public ActionResult AddToOrder(FormCollection formCollection)
+        public ActionResult AddToOrder(OrderItemModel item)
         {
             using (var unitOfWork = _unitOfWorkFactory.Create())
             {
@@ -92,36 +91,8 @@ namespace MVC.Controllers
                 {
                     orderItems = new List<OrderItemModel>();
                 }
-
-                int itemId = 0;
-                int itemQuantity = 0;
-
-                foreach (var key in formCollection.Keys)
-                {
-                    if (key.ToString().StartsWith("item_id"))
-                    {
-                        itemId = int.Parse(formCollection[key.ToString()]);
-                    }
-
-                    if (key.ToString().StartsWith("item_quantity"))
-                    {
-                        itemQuantity = int.Parse(formCollection[key.ToString()]);
-                    }
-                }
-
-                var item = items.First(x => x.id == itemId);
-                var orderItem = new OrderItemModel
-                {
-                    item_id = item.id,
-                    price = item.price,
-                    description = item.description,
-                    quantity = itemQuantity
-                };
-
-                orderItems.Add(orderItem);
-
+                orderItems.Add(item);
                 Session["order_items"] = orderItems;
-
                 return View("Index");
             }
         }

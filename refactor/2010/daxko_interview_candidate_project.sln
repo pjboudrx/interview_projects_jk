@@ -1,9 +1,11 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MVC", "MVC\MVC.csproj", "{2B1A7342-EC63-4EED-BFA2-3C89AE1151DE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{35DDA607-0541-4751-9CFF-AE1BCE2E3CF2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MVCLayerTests", "MVCLayerTests\MVCLayerTests.csproj", "{E5D1818E-F0B0-4E5A-AD78-4710B415F79C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,6 +21,10 @@ Global
 		{35DDA607-0541-4751-9CFF-AE1BCE2E3CF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35DDA607-0541-4751-9CFF-AE1BCE2E3CF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35DDA607-0541-4751-9CFF-AE1BCE2E3CF2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5D1818E-F0B0-4E5A-AD78-4710B415F79C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5D1818E-F0B0-4E5A-AD78-4710B415F79C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5D1818E-F0B0-4E5A-AD78-4710B415F79C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5D1818E-F0B0-4E5A-AD78-4710B415F79C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
