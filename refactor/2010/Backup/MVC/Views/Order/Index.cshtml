@@ -1,0 +1,92 @@
+﻿@using System.Collections
+@using Domain
+@using MVC.Models.Order
+<!DOCTYPE html>
+
+<html>
+<head>
+    <link href="../../Content/yellowing/style.css" rel="stylesheet" type="text/css" />
+
+    <title>Index</title>
+</head>
+<body>
+    <div id="wrapper">
+	    <div id="header">
+		    <div id="logo">
+			    <h1>Ordering System</h1>
+		    </div>
+        </div>
+
+	    <div id="page">
+		    <div id="page-bgtop">
+			    <div id="page-bgbtm">
+				    <div id="menu">
+					    <ul>
+						    <li><a href="@Url.Action("Index","Home")">Home</a></li>
+                            <li class="current_page_item"><a href="@Url.Action("Index","Order")">Order</a></li>
+                            <li><a href="@Url.Action("ViewPastOrders","Order")">Past Orders</a></li>
+					    </ul>
+				    </div>
+
+				    <div id="content">
+                        <div>
+                            <h1>Items available to purchase</h1>
+                            <table width="100%">
+                                <tr>
+                                    <th align="left">Description</th>
+                                    <th align="left">Price</th>
+                                    <th align="left">Quantity</th>
+                                </tr>
+
+                                @{foreach (var item in (IList<Item>)ViewData["items"]){
+                                    <form action="@Url.Action("AddToOrder","Order")" method="POST">
+                                        <input type="hidden" id="@("item_id_" + item.id)" name="@("item_id_" + item.id)" value="@item.id"/>
+                                        <tr>
+                                            <td>@item.description</td>
+                                            <td>@String.Format("{0:C}",item.price)</td>
+                                            <td><input type="text" id="@("item_quantity_" + @item.id)" name="@("item_quantity_" + @item.id)" style="width: 50px;" value="1" /></td>
+                                            <td><input type="submit" value="Add to order"/></td>
+                                        </tr>
+                                    </form>
+                                    }
+                                }
+                            </table>
+                        </div>
+
+                        <p></p>
+
+                        @if (((IList<OrderItemModel>)Session["order_items"]).Count > 0)
+                        {
+                            <div>
+                                <h1>Items to Order</h1>
+                                <form action="@Url.Action("Save", "Order")" method="POST">
+                                    <table width="100%">
+                                        <tr>
+                                            <th align="left">Item</th>
+                                            <th align="left">Quantity</th>
+                                            <th align="left">Price</th>
+                                            <th align="left">Total</th>
+                                        </tr>                            
+
+                                        @foreach (var order_item in (IList<OrderItemModel>)Session["order_items"])
+                                        {
+                                            <tr>
+                                                <td>@order_item.description</td>
+                                                <td>@order_item.quantity</td>
+                                                <td>@String.Format("{0:C}",order_item.price)</td>
+                                                <td>@String.Format("{0:C}",order_item.price * order_item.quantity)</td>
+                                            </tr>                                    
+                                        }
+                                    </table>
+
+                                    <input type="submit" value="Submit order" />
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+	</div>
+</body>
+</html>

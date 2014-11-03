@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net.Mail;
 using System.Web.Mvc;
+using System.Web.UI.WebControls;
 using Domain.DomainClasses;
 using Domain.Repository.Interfaces;
 using MVC.Models.Order;
@@ -95,6 +97,40 @@ namespace MVC.Controllers
                 Session["order_items"] = orderItems;
                 return View("Index");
             }
+        }
+
+        [HttpPost]
+        public ActionResult SubmitOrder(List<OrderItemModel> items)
+        {
+            var validItems = items.Where(x => x.quantity != 0).ToList();
+            using (var unitOfWork = _unitOfWorkFactory.Create())
+            {
+                var availableItems = unitOfWork.GetRepository<Item>().GetAll();
+                correctItemPrices(validItems, availableItems);
+                IList<OrderItemModel> orderItems = (IList<OrderItemModel>)Session["order_items"];
+                if (orderItems == null)
+                {
+                    orderItems = new List<OrderItemModel>();
+                }
+                foreach (var item in validItems)
+                {
+                    orderItems.Add(item);
+                }
+                Session["order_items"] = orderItems;
+                return Save();
+            }
+        }
+
+        /// <summary>
+        /// MVC3 data binding does a terrible job with decimals and will generally return 0.
+        /// use the available items to correct the provided prices.
+        /// </summary>
+        /// <param name="submittedItems"></param>
+        /// <param name="availableItems"></param>
+        private void correctItemPrices(List<OrderItemModel> submittedItems, IList<Item> availableItems)
+        {
+            var itemsDictionary = availableItems.ToDictionary(x => x.id, y => y);
+            submittedItems.ForEach( item => item.price = itemsDictionary[item.item_id].price);
         }
     }
 }
