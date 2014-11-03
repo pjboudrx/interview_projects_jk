@@ -5,89 +5,106 @@
 <html>
 <head>
     <link href="../../Content/yellowing/style.css" rel="stylesheet" type="text/css" />
-
+    <link href="@Url.Content("/Content/Site.css")" rel="stylesheet" type="text/css"/>
     <title>Index</title>
 </head>
-<body>
-    <div id="wrapper">
-	    <div id="header">
-		    <div id="logo">
-			    <h1>Ordering System</h1>
-		    </div>
-        </div>
+    <body>
+        <div id="wrapper">
+            <div id="header">
+                <div id="logo">
+                    <h1>Ordering System</h1>
+                </div>
+            </div>
 
-	    <div id="page">
-		    <div id="page-bgtop">
-			    <div id="page-bgbtm">
-				    <div id="menu">
-					    <ul>
-						    <li><a href="@Url.Action("Index","Home")">Home</a></li>
-                            <li class="current_page_item"><a href="@Url.Action("Index","Order")">Order</a></li>
-                            <li><a href="@Url.Action("ViewPastOrders","Order")">Past Orders</a></li>
-					    </ul>
-				    </div>
-
-				    <div id="content">
-                        <div>
-                            <h1>Items available to purchase</h1>
-                            <table width="100%">
-                                <tr>
-                                    <th align="left">Description</th>
-                                    <th align="left">Price</th>
-                                    <th align="left">Quantity</th>
-                                </tr>
-
-                                @{foreach (var item in (IList<Item>)ViewData["items"]){
-                                    <form action="@Url.Action("AddToOrder","Order")" method="POST">
-                                        <input type="hidden" id="@("item_id_" + item.id)" name="item_id" value="@item.id"/>
-                                        <input type="hidden" id="@("item_description_" + item.id)" name="description" value="@item.description"/>
-                                        <input type="hidden" id="@("item_price_" + item.id)" name="price" value="@item.price"/>
-                                        <tr>
-                                            <td>@item.description</td>
-                                            <td>@String.Format("{0:C}",item.price)</td>
-                                            <td><input type="text" id="@("item_quantity_" + @item.id)" name="quantity" style="width: 50px;" value="1" /></td>
-                                            <td><input type="submit" value="Add to order"/></td>
-                                        </tr>
-                                    </form>
-                                    }
-                                }
-                            </table>
+            <div id="page">
+                <div id="page-bgtop">
+                    <div id="page-bgbtm">
+                        <div id="menu">
+                            <ul>
+                                <li><a href="@Url.Action("Index","Home")">Home</a></li>
+                                <li class="current_page_item"><a href="@Url.Action("Index","Order")">Order</a></li>
+                                <li><a href="@Url.Action("ViewPastOrders","Order")">Past Orders</a></li>
+                            </ul>
                         </div>
 
-                        <p></p>
+                        <div id="content">
+                            <div ng-app="orderApp" ng-controller="orderFormController">
+                                
+                                <h1>{{formHeader}}</h1>
+                                <table width="100%">
+                                    <tr>
+                                        <th align="left">Description</th>
+                                        <th align="left">Price</th>
+                                        <th align="left">Quantity</th>
+                                        <th>SubTotal</th>
 
-                        @if (((IList<OrderItemModel>)Session["order_items"]).Count > 0)
-                        {
-                            <div>
-                                <h1>Items to Order</h1>
-                                <form action="@Url.Action("Save", "Order")" method="POST">
-                                    <table width="100%">
-                                        <tr>
-                                            <th align="left">Item</th>
-                                            <th align="left">Quantity</th>
-                                            <th align="left">Price</th>
-                                            <th align="left">Total</th>
-                                        </tr>                            
-
-                                        @foreach (var order_item in (IList<OrderItemModel>)Session["order_items"])
-                                        {
-                                            <tr>
-                                                <td>@order_item.description</td>
-                                                <td>@order_item.quantity</td>
-                                                <td>@String.Format("{0:C}",order_item.price)</td>
-                                                <td>@String.Format("{0:C}",order_item.price * order_item.quantity)</td>
-                                            </tr>                                    
-                                        }
-                                    </table>
-
-                                    <input type="submit" value="Submit order" />
-                                </form>
+                                    </tr>
+                                    <tr ng-repeat="itemDef in availableItems">
+                                        <td>{{itemDef.description}}</td>
+                                        <td>{{itemDef.price}}</td>
+                                        <td><input type="text"  style="width: 50px;" ng-model="itemDef.quantity" ng-change="updateRunningTotal({{itemDef.item_id}})"/></td>
+                                        <td class="subtotal_cell">{{itemDef.subtotal}}</td>
+                                    </tr>
+                                    <tr class="SubTotals">
+                                        <td>Totals</td>
+                                        <td></td>
+                                        <td>{{TotalCount}}</td>
+                                        <td class="subtotal_cell">{{OrderSubTotal}}</td>
+                                    </tr>
+                                </table>
+                                <button ng-click="submitOrder()">Submit!</button>
                             </div>
-                        }
+
+                            <p></p>
+
+                            @if (((IList<OrderItemModel>)Session["order_items"]).Count > 0)
+                            {
+                                <div>
+                                    <h1>Items to Order</h1>
+                                    <form action="@Url.Action("Save", "Order")" method="POST">
+                                        <table width="100%">
+                                            <tr>
+                                                <th align="left">Item</th>
+                                                <th align="left">Quantity</th>
+                                                <th align="left">Price</th>
+                                                <th align="left">Total</th>
+                                            </tr>                            
+
+                                            @foreach (var order_item in (IList<OrderItemModel>)Session["order_items"])
+                                            {
+                                                <tr>
+                                                    <td>@order_item.description</td>
+                                                    <td>@order_item.quantity</td>
+                                                    <td>@String.Format("{0:C}",order_item.price)</td>
+                                                    <td>@String.Format("{0:C}",order_item.price * order_item.quantity)</td>
+                                                </tr>                                    
+                                            }
+                                        </table>
+
+                                        <input type="submit" value="Submit order" />
+                                    </form>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-	</div>
-</body>
+    </body>
+    
+    <script type="text/javascript">
+        var availableItems = []
+        @foreach (var Item in (IList<Item>)ViewData["items"])
+        {
+
+            @Html.Raw(String.Format(@"availableItems.push({{item_id:{0}, description:'{1}', price:{2:F1}, quantity:0}});
+", 
+                Item.id,
+                HttpUtility.JavaScriptStringEncode(Item.description),
+                Item.price));
+        }
+    </script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.0/angular.js" type="text/javascript"></script>
+    <script src="@Url.Content("/Scripts/AngularApp/app.js")" type="text/javascript"></script>
+    <script src="@Url.Content("/Scripts/AngularApp/Controllers/orderFormController.js")" type="text/javascript"></script>
 </html>

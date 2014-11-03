@@ -73,3 +73,12 @@ textarea
 {
     display: none;
 }
+
+/*Styles for angular driven ordering form*/
+tr.SubTotals > td{
+    border-top: thin solid #CCCCCC;
+}
+
+td.subtotal_cell {
+    border-left: thin solid #CCCCCC;
+}
