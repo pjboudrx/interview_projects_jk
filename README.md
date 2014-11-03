@@ -15,3 +15,6 @@ The first thing I'll tackle is the repository / data layer. The listed repositor
 
 ### SMTP Service Branch
 There is a hard dependency on the system SMTP libraries.  Create a service that wraps this and inject it into the controller 
+
+### StoreItemsInRepository Branch
+The items are new'ed up in the controller every time.  This isn't too realistic.  Lets add an application bootstrap function to Global.asax that inserts the items into the item repository on start.
