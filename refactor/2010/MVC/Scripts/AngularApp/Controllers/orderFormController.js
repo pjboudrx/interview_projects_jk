@@ -1,6 +1,6 @@
 ﻿var app = angular.module('orderApp.orderForm', []);
 
-app.controller('orderFormController', function($scope, $http) {
+app.controller('orderFormController', function($scope, $http, $location) {
     $scope.formHeader = 'Items available to purchase';
     if (availableItems != null) {
         $scope.availableItems = availableItems;
@@ -29,7 +29,7 @@ app.controller('orderFormController', function($scope, $http) {
     $scope.submitOrder = function() {
         $http.post('/Order/SubmitOrder', $scope.availableItems).
         success(function(data, status, headers, config) {
-            
+	        
         });
     }
 });
