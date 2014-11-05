@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Net.Mail;
 using System.Web.Mvc;
-using System.Web.UI.WebControls;
 using Domain.DomainClasses;
 using Domain.Repository.Interfaces;
 using MVC.Models.Order;
@@ -13,8 +12,10 @@ namespace MVC.Controllers
     public class OrderController : Controller
     {
         private const string OrderEmailFromAddress = "peter@initech.com";
+        private const string ToEmailAddress = "ordering@initech.com";
         private IUnitOfWorkFactory _unitOfWorkFactory;
         private ISMTPService _smtpService;
+        
 
         public OrderController(IUnitOfWorkFactory unitOfWorkFactory, ISMTPService smtpService)
         {
@@ -41,39 +42,6 @@ namespace MVC.Controllers
             }
         }
 
-        [HttpPost]
-        public ActionResult Save()
-        {
-            //Save Order
-            using (var unitOfWork = _unitOfWorkFactory.Create())
-            {
-                var orderRepository = unitOfWork.GetRepository<Order>();
-                var orderItemRepository = unitOfWork.GetRepository<OrderItem>();
-                var orderItems = (IList<OrderItemModel>)Session["order_items"];
-                var order = new Order();
-
-                foreach (var orderItem in orderItems)
-                {
-                    var item = new OrderItem
-                    {
-                        item_id = orderItem.item_id,
-                        quantity = orderItem.quantity,
-                        price = orderItem.price
-                    };
-                    orderItemRepository.Save(item);
-                    order.items.Add(item);
-                }
-
-                orderRepository.Save(order);
-
-                //TODO:  Gather this from user input
-                SendOrderEmailNotification("ordering@initech.com");
-
-                ViewData["order"] = order;
-                return View("ThankYou");
-            }
-        }
-
         private void SendOrderEmailNotification(string orderEmailToAddress)
         {
             MailMessage email = new MailMessage(OrderEmailFromAddress, orderEmailToAddress);
@@ -82,43 +50,47 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
-        public ActionResult AddToOrder(OrderItemModel item)
-        {
-            using (var unitOfWork = _unitOfWorkFactory.Create())
-            {
-                IList<Item> items = unitOfWork.GetRepository<Item>().GetAll();
-                ViewData["items"] = items;
-                IList<OrderItemModel> orderItems = (IList<OrderItemModel>) Session["order_items"];
-                if (orderItems == null)
-                {
-                    orderItems = new List<OrderItemModel>();
-                }
-                orderItems.Add(item);
-                Session["order_items"] = orderItems;
-                return View("Index");
-            }
-        }
-
-        [HttpPost]
-        public ActionResult SubmitOrder(List<OrderItemModel> items)
+        public JsonResult SubmitOrder(List<OrderItemModel> items)
         {
             var validItems = items.Where(x => x.quantity != 0).ToList();
             using (var unitOfWork = _unitOfWorkFactory.Create())
             {
-                var availableItems = unitOfWork.GetRepository<Item>().GetAll();
-                correctItemPrices(validItems, availableItems);
-                IList<OrderItemModel> orderItems = (IList<OrderItemModel>)Session["order_items"];
-                if (orderItems == null)
+                var orderItems = BuildOrderItemList(unitOfWork, validItems);
+                var orderId = PersistOrder(orderItems, unitOfWork);
+                if (orderId > 0)
                 {
-                    orderItems = new List<OrderItemModel>();
+                    return Json(new {OrderId = orderId, SuccessfulTransaction = true});
                 }
-                foreach (var item in validItems)
-                {
-                    orderItems.Add(item);
-                }
-                Session["order_items"] = orderItems;
-                return Save();
+                return Json(new { OrderId = 0, SuccessfulTransaction = false });
             }
+        }
+
+        private IList<OrderItemModel> BuildOrderItemList(IUnitOfWork unitOfWork, List<OrderItemModel> validItems)
+        {
+            var availableItems = unitOfWork.GetRepository<Item>().GetAll();
+            correctItemPrices(validItems, availableItems);
+            return validItems;
+        }
+
+        private long PersistOrder(IList<OrderItemModel> orderItems, IUnitOfWork unitOfWork)
+        {
+            var orderRepository = unitOfWork.GetRepository<Order>();
+            var orderItemRepository = unitOfWork.GetRepository<OrderItem>();
+            var order = new Order();
+            foreach (var orderItem in orderItems)
+            {
+                var item = new OrderItem
+                {
+                    item_id = orderItem.item_id,
+                    quantity = orderItem.quantity,
+                    price = orderItem.price
+                };
+                orderItemRepository.Save(item);
+                order.items.Add(item);
+            }
+            orderRepository.Save(order);
+            SendOrderEmailNotification(ToEmailAddress);
+            return order.id;
         }
 
         /// <summary>
