@@ -70,61 +70,79 @@ namespace MVCLayerTests
         }
 
         [TestMethod]
-        public void SaveActionReturnsViewResultTest()
+        public void SubmitOrderActionReturnsSuccessfulJsonResponse()
         {
             //Setup
             TestControllerBuilder builder;
             Mocks localMocks = new Mocks();
             var controller = BuildSimpleMockedOrderController(ref localMocks, out builder);
+            //overwrite the existing save mock so that it'll act like the persist was successful
+            localMocks.OrderRepository.BackToRecord(BackToRecordOptions.All);
+            localMocks.OrderRepository.Replay();
+            localMocks.OrderRepository.Stub(x => x.Save(Arg<Order>.Is.Anything)).Return(true).WhenCalled(_ =>
+            {
+                var order = (Order)_.Arguments[0];
+                order.id = 1;
+            });
             if (controller.HttpContext.Session != null)
             {
-                controller.HttpContext.Session["order_items"] = 
-                    FixedOrderItems.Select( x => 
-                        new OrderItemModel
-                        {
-                            description = FixedItems.First( fi => fi.id == x.item_id ).description,
-                            item_id = x.item_id,
-                            quantity = x.quantity,
-                            price = x.price
-                        }).ToList();
-                //Act
-                ActionResult result = controller.Save();
-                //Assert
-                
-                //Assert all OrderItems are saved
-                localMocks.OrderItemRepository.AssertWasCalled(x => x.Save(Arg<OrderItem>.Is.Anything),options => options.Repeat.Times(FixedOrderItems.Count));
-                //Assert that the order was saved
-                localMocks.OrderRepository.AssertWasCalled(x => x.Save(Arg<Order>.Is.Anything), options => options.Repeat.Once());
-                //Assert email was sent
-                localMocks.SMTPService.AssertWasCalled(x => x.SendEMail(Arg<MailMessage>.Is.Anything));
-                //Verify proper order structure
-                Assert.IsInstanceOfType(controller.ViewData["order"], typeof(Order));
-                var order = (Order) controller.ViewData["order"];
-                var genericOrderItems = FixedOrderItems.Select(x => new {x.item_id, x.price, x.quantity });
-                Assert.IsTrue(order.items.All( item => genericOrderItems.Contains(new {item.item_id, item.price, item.quantity})));
-                //Verify proper view is displayed
-                result.AssertViewRendered().ForView("ThankYou");
+                var successfulTransaction = BuildAndSubmitOrderFromFixedOrderItems(controller, localMocks);
+                Assert.IsTrue(successfulTransaction);
             }
         }
 
         [TestMethod]
-        public void AddToOrderActionReturnsViewResultTest()
+        public void SubmitOrderActionReturnsUnsuccessfulJsonResponse()
         {
             //Setup
             TestControllerBuilder builder;
             Mocks localMocks = new Mocks();
             var controller = BuildSimpleMockedOrderController(ref localMocks, out builder);
-            var orderItem = new OrderItemModel { description = "test item", item_id = 0, price = 5, quantity = 2 };
-            //Act
-            ActionResult result = controller.AddToOrder( orderItem );
-            //Assert
-            result.AssertViewRendered();
+            //overwrite the existing save mock so that it'll act like the persist was successful
+            localMocks.OrderRepository.BackToRecord(BackToRecordOptions.All);
+            localMocks.OrderRepository.Replay();
+            localMocks.OrderRepository.Stub(x => x.Save(Arg<Order>.Is.Anything)).Return(false).WhenCalled(_ =>
+            {
+                var order = (Order)_.Arguments[0];
+                order.id = 0;
+            });
             if (controller.HttpContext.Session != null)
             {
-                var orderItems = (List<OrderItemModel>) controller.HttpContext.Session["order_items"];
-                Assert.IsInstanceOfType(controller.HttpContext.Session["order_items"], typeof (List<OrderItemModel>));
-                Assert.IsTrue(orderItems.Contains(orderItem));
+                var successfulTransaction = BuildAndSubmitOrderFromFixedOrderItems(controller, localMocks);
+                Assert.IsFalse(successfulTransaction);
             }
+        }
+
+        private static bool BuildAndSubmitOrderFromFixedOrderItems(OrderController controller, Mocks localMocks)
+        {
+            var orderItems =
+                FixedOrderItems.Select(x =>
+                    new OrderItemModel
+                    {
+                        description = FixedItems.First(fi => fi.id == x.item_id).description,
+                        item_id = x.item_id,
+                        quantity = x.quantity,
+                        price = x.price
+                    }).ToList();
+            //Act
+            JsonResult result = controller.SubmitOrder(orderItems);
+            //Assert
+
+            //Assert all OrderItems are saved
+            localMocks.OrderItemRepository.AssertWasCalled(x => x.Save(Arg<OrderItem>.Is.Anything),
+                options => options.Repeat.Times(FixedOrderItems.Count));
+            //Assert that the order was saved
+            localMocks.OrderRepository.AssertWasCalled(x => x.Save(Arg<Order>.Is.Anything), options => options.Repeat.Once());
+            //Assert email was sent
+            localMocks.SMTPService.AssertWasCalled(x => x.SendEMail(Arg<MailMessage>.Is.Anything));
+
+            //Verify proper successful json is returned
+            Assert.IsInstanceOfType(result, typeof (JsonResult));
+            var data = result.Data;
+            //I do wish reflection wasn't necessary but if we're not going to use web api for our client side api methods c'est la vie
+            var successfulTransaction =
+                (bool) data.GetType().GetProperty("SuccessfulTransaction").GetValue(data, null);
+            return successfulTransaction;
         }
 
         private OrderController BuildSimpleMockedOrderController(ref Mocks localMocks, out TestControllerBuilder builder)

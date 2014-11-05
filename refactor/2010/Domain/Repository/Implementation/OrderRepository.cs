@@ -36,6 +36,10 @@ namespace Domain.Repository.Implementation
                         var id = _orders.Select(order => order.id).Max();
                         entity.id = ++id;
                     }
+                    else
+                    {
+                        entity.id = 1;
+                    }
                     _orders.Add(entity);
                 } 
 
