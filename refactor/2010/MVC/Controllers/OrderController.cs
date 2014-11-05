@@ -56,12 +56,12 @@ namespace MVC.Controllers
             using (var unitOfWork = _unitOfWorkFactory.Create())
             {
                 var orderItems = BuildOrderItemList(unitOfWork, validItems);
-                var orderId = PersistOrder(orderItems, unitOfWork);
-                if (orderId > 0)
+                var order = PersistOrder(orderItems, unitOfWork);
+                if (order.id > 0)
                 {
-                    return Json(new {OrderId = orderId, SuccessfulTransaction = true});
+                    return Json(new {Order = order, SuccessfulTransaction = true});
                 }
-                return Json(new { OrderId = 0, SuccessfulTransaction = false });
+                return Json(new { Order = order, SuccessfulTransaction = false });
             }
         }
 
@@ -72,7 +72,7 @@ namespace MVC.Controllers
             return validItems;
         }
 
-        private long PersistOrder(IList<OrderItemModel> orderItems, IUnitOfWork unitOfWork)
+        private Order PersistOrder(IList<OrderItemModel> orderItems, IUnitOfWork unitOfWork)
         {
             var orderRepository = unitOfWork.GetRepository<Order>();
             var orderItemRepository = unitOfWork.GetRepository<OrderItem>();
@@ -90,7 +90,7 @@ namespace MVC.Controllers
             }
             orderRepository.Save(order);
             SendOrderEmailNotification(ToEmailAddress);
-            return order.id;
+            return order;
         }
 
         /// <summary>
